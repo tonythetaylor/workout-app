@@ -1,0 +1,82 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Goal {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  user         User      @relation(fields: [userId], references: [id])
+  name         String // Name of the goal (e.g., "Lose Weight", "Run 5k")
+  targetValue  Float? // Target value (e.g., 150 lbs, 5 km)
+  currentValue Float? // Current progress towards the goal
+  unit         String // Unit of measurement (e.g., "lbs", "km")
+  deadline     DateTime? // Optional deadline for the goal
+  isAchieved   Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("goals")
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  email        String         @unique
+  password     String
+  name         String?
+  role         String         @default("user") // "user" or "admin"
+  theme        String         @default("light") // "light" or "dark"
+  accessToken  String? // Optional field for the current access token
+  refreshToken String? // Optional field for the refresh token
+  metrics      DailyMetrics[]
+  goals        Goal[] // Relation to Goal model
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Workout {
+  id             Int           @id @default(autoincrement())
+  type           String
+  duration       Int? // Duration in minutes
+  calories       Int? // Calories burned
+  dailyMetric    DailyMetrics? @relation(fields: [dailyMetricsId], references: [id])
+  dailyMetricsId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("workouts")
+}
+
+model DailyMetrics {
+  id               Int       @id @default(autoincrement())
+  userId           Int
+  user             User      @relation(fields: [userId], references: [id])
+  weight           Float?
+  waist            Float?
+  hips             Float?
+  thighs           Float?
+  arms             Float?
+  chest            Float?
+  workoutCompleted Boolean
+  workouts         Workout[] // Relation to Workout table
+  caloriesConsumed Int?
+  waterIntake      Int?
+  steps            Int?
+  mood             Int?
+  notes            String?
+  date             DateTime
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@map("daily_metrics")
+}
